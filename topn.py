@@ -41,7 +41,6 @@ def ter():
 		w.write(line+"  "+"( "+str(count)+" )"+"\n")
 		count += 1
 
-
 if __name__ == "__main__":
 	if args.mode == "nbest":
 		nbestList()
