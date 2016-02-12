@@ -12,7 +12,6 @@ parser.add_argument("-mode", dest="mode", choices=["nbest","cut","ter"], default
 parser.add_argument("-ter", dest="ter", choices=["1", "0"], default="0", help="delimiter for ter evaluation")
 args = parser.parse_args()
 
-
 f = open(args.input,"r")
 w = open(args.write,"w")
 
