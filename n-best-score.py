@@ -27,7 +27,6 @@ number = re.compile(r'\d+')
 f_deli = re.compile(r'\w+:')
 
 def n_best(line):
-	p = re.compile(r'\|.*?\|')
 	sentence = line.split(" ||| ")
 	phrases = p.split(sentence[1].strip())
 
@@ -39,7 +38,6 @@ def main():
 	n_best_out = open(args.nbest_out, "w")
 
 	dic = make_dic()
-
 	for line in n_best_file:
 		dis = 0
 		target_list = n_best(line)
@@ -87,15 +85,11 @@ def bunsan(dis_list):
 		cos_list.append(cos_dis)
 
 	if len(cos_list) > 1:
-		cos_av = sum(cos_list) / len(cos_list)
-		bunsan = sum([abs(cos_av - cos) for cos in cos_list]) / len(cos_list)
-		try:
-			score = log(bunsan)
-		except:
-			score = float(0.0)
+        cos_av = sum(cos_list) / len(cos_list)
+        bunsan = sum([abs(cos_av - cos) for cos in cos_list]) / len(cos_list)
+        score = log(bunsan)
 	else:
 		score = float(0.0)
-
 	if np.isnan(score):
 		score = float(0.0)
 
@@ -114,14 +108,9 @@ def sub_cos(dis_list):
 		for cos in cos_list:
 			tmp_sub = abs(cos_av - cos)
 			if tmp_sub > sub: sub = tmp_sub
-
-		try:
-			score = log(sub)
-		except:
-			score = float(0.0)
+        score = log(sub)
 	else:
 		score = float(0.0)
-
 	if np.isnan(score):
 		score = float(0.0)
 
@@ -134,14 +123,9 @@ def average_cos(dis_list):
 		for dis in dis_list:
 			tmp_cos = 1 - scipy.spatial.distance.cosine(dis_av, dis)
 			if tmp_cos < cos: cos = tmp_cos
-
-		try:
-			score = log(cos)
-		except:
-			score = float(0.0)
+		score = log(cos)
 	else:
 		score = float(0.0)
-
 	if np.isnan(score):
 		score = float(0.0)
 
@@ -155,24 +139,15 @@ def min_cos(dis_list):
                 cos_list.append(cos_dis)
 
         if len(cos_list) > 1:
-
-                try:
-                        score = log(min(cos_list))
-                except:
-                        score = float(0.0)
+            score = log(min(cos_list))
         else:
-                try:
-                        score = log(cos_dis)
-                except:
-                        score = float(0.0)
-
+            score = log(cos_dis)
         if np.isnan(score):
                 score = float(0.0)
 
         return score
 
 def make_keyList():
-
 	key_list = []
 	tmp_n_best = open(args.nbest,"r")
 	tmp_source_file = open(args.src,"r").readlines()
@@ -183,16 +158,11 @@ def make_keyList():
 		source = tmp_source_file[source_num].split()
 		translation = line.split("|||")[1]
 		aligns = p.findall(translation)
-
-		dis_list = []
-		cos_list = []
-
 		for align, target in zip(aligns, target_list):
 			align_num = number.findall(align)
 			start = int(align_num[0])
 			end = int(align_num[1])+1
 			source_words = source[start:end]
-
 			key = " ".join(source_words), "".join(target.strip())
 			key_list.append(key)
 	sys.stderr.write("Done!\n")
@@ -217,8 +187,6 @@ def make_dic():
 	return dc
 
 
-
 if __name__ == "__main__":
 	main()
 	
-

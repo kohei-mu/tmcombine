@@ -53,7 +53,7 @@ def handle_file(filename, action, mode='r'):
 		if mode == 'r':
 			mode = 'rb+'
 		elif mode == 'w':
-			mode = 'wb+'
+            mode = 'wb+'
 
 		if mode == 'rb+' and not os.path.exists(filename):
 			if os.path.exists(filename + '.gz'):
@@ -150,43 +150,43 @@ def _write_phrasetable_file(line):
 def table_sort(model, w_model,flag=None, key=None):
 	""" sort phrase-table and invert src/tgt order """
 
-	dic = {}
-    	dic_count = 0
-    	write_model = handle_file(w_model, "open", "w")
+    dic = {}
+    dic_count = 0
+    write_model = handle_file(w_model, "open", "w")
 
-    	for i in model:
-			if flag == "ps_invert":
-				i = inverse_model(i)
-				i = i.strip().split("|||")
-			else:
-				i = i.strip().split("|||")
+    for i in model:
+		if flag == "ps_invert":
+			i = inverse_model(i)
+			i = i.strip().split("|||")
+		else:
+			i = i.strip().split("|||")
 		
-			if key == "tgt":
-				dic[i[1], i[0], dic_count] = i
-			else:
-				dic[i[0], i[1], dic_count] = i
-			dic_count += 1
+		if key == "tgt":
+			dic[i[1], i[0], dic_count] = i
+		else:
+            dic[i[0], i[1], dic_count] = i
+            dic_count += 1
 
-    	num = len(dic)
-    	count = 1
+    num = len(dic)
+    count = 1
 
-    	#dicをabc降順、フレーズの長さの長い順に並べ替え
-    	for j in sorted(dic.keys(), reverse=True, key=lambda x :(x[0],x[1])):
-		if len(dic[j]) == 7:
+    #dicをabc降順、フレーズの長さの長い順に並べ替え
+    for j in sorted(dic.keys(), reverse=True, key=lambda x :(x[0],x[1])):
+        if len(dic[j]) == 7:
 			src, tgt , features, alignments, word_counts, pvt, tp = dic[j][:7]
 			line = "%s|||%s|||%s|||%s|||%s|||%s|||%s" %(src,tgt,features,alignments,word_counts, pvt, tp)
 		elif len(dic[j]) == 6:
 			src, tgt , features, alignments, word_counts, tp = dic[j][:6]
 			line = "%s|||%s|||%s|||%s|||%s|||%s" %(src,tgt,features,alignments,word_counts, tp)
 		elif len(dic[j]) == 5:
-    			src, tgt , features, alignments, word_counts = dic[j][:5]
-    			line = "%s|||%s|||%s|||%s|||%s" %(src,tgt,features,alignments,word_counts)                
+    		src, tgt , features, alignments, word_counts = dic[j][:5]
+    		line = "%s|||%s|||%s|||%s|||%s" %(src,tgt,features,alignments,word_counts)                
 
-       		if count < num:line = line + "\n"
+        if count < num:line = line + "\n"
         	count += 1
         	write_model.write(line)
 
-    	handle_file(write_model, "close",mode="w")
+    handle_file(write_model, "close",mode="w")
 
 def inverse_model(line):
 	""" invert src/tgt order of phrase-table  """
@@ -198,7 +198,7 @@ def inverse_model(line):
 	line[1] = line[0].strip()
 	line[0] = pvt_word
 
-    	#features
+    #features
 	features = line[2]
 	tmp = features[0]
 	features[0] = features[2]
@@ -207,13 +207,13 @@ def inverse_model(line):
 	features[1] = features[3]
 	features[3] = tmp
 
-    	#alignment
+    #alignment
 	phrase_align = defaultdict(lambda: []*3)
 	for src_word, tgt_list in line[3].iteritems():
 		for tgt_word in tgt_list:
 			phrase_align[tgt_word].append(src_word)
 
-    	#sometimes, the count is too big
+    #sometimes, the count is too big
 	if (len(line[4]) > 1):
 		tmp = line[4][0]
 		line[4][0] = line[4][1]
@@ -239,7 +239,7 @@ def inverse_model(line):
 	return outline
 
 def makeDic_p(model, proc, p):
-	""" make pvt:word dis dictionary by multiprocessing  """
+	""" make pvt:word dis dictionary by multiprocessing(need for mode 1)  """
 
 	modelLength = len(model)
 	ini = modelLength * p / proc
@@ -280,48 +280,48 @@ def lda_process(src_tgt, pvt, dis,  model, proc,flag, p):
 
 		if args.tp == 3:
 			srctgt = line[0].strip()
-                	pivot = line[1].strip()
+            pivot = line[1].strip()
 
-       		elif args.tp == 2:
-                	pivot = line[0].strip()
-                	srctgt = line[1].strip()
+        elif args.tp == 2:
+            pivot = line[0].strip()
+            srctgt = line[1].strip()
 
 		elif (args.tp == 4 or args.tp == 5 or args.tp == 6)  and flag == "ps":
 			srctgt = line[0].strip()
-                        pivot = line[1].strip()
+            pivot = line[1].strip()
 
 		elif (args.tp == 4 or args.tp == 5 or args.tp == 6)  and flag == "pt":
 			pivot = line[0].strip()
-                        srctgt = line[1].strip()
+            srctgt = line[1].strip()
 
-        	tp_count = 0
-        	tmp_dis = np.array([0]*args.tpnum,dtype=np.float)
-        	for f in range(len(dis)):
-                	if srctgt in src_tgt[f] and pivot in pvt[f]:
-                        	topic = np.array(dis[f].strip().split(), dtype=np.float)
-                        	tp_count += 1
+        tp_count = 0
+    	tmp_dis = np.array([0]*args.tpnum,dtype=np.float)
+    	for f in range(len(dis)):
+            if srctgt in src_tgt[f] and pivot in pvt[f]:
+                topic = np.array(dis[f].strip().split(), dtype=np.float)
+                tp_count += 1
 				c = min(src_tgt[f].count(srctgt), pvt[f].count(pivot)) # count(I,D)
 				tmp_dis += c * topic
-        	if tp_count > 0:
-			#normalize
-			tp_sum = sum(tmp_dis)
-			tp =  " ".join(["%.6g" %(f) for f in [i / tp_sum  for i in tmp_dis] ])
-        	elif tp_count == 0:
+        if tp_count > 0:
+		    #normalize
+		    tp_sum = sum(tmp_dis)
+		    tp =  " ".join(["%.6g" %(f) for f in [i / tp_sum  for i in tmp_dis] ])
+        elif tp_count == 0:
 			continue
 
-        	line.append(tp)
-        	outline = " ||| ".join(line)
+    	line.append(tp)
+    	outline = " ||| ".join(line)
 		lst.append(outline)
 	return lst
 
 def lda_main(src_tgt, pvt, dis,  table, proc, w, flag=None):
 	""" add document topic distribution to phrase table using lda_process function(nedd for mode 2,3,4,5,6)  """
 
-	w_file = handle_file(w, "open", mode="w")
-        model = table.readlines()
+    w_file = handle_file(w, "open", mode="w")
+    model = table.readlines()
 	pool = mp.Pool(proc)
-        e = partial(lda_process, src_tgt, pvt, dis, model,proc, flag)
-        callback = pool.map(e, range(proc))
+    e = partial(lda_process, src_tgt, pvt, dis, model,proc, flag)
+    callback = pool.map(e, range(proc))
 
 	for i in callback:
 		for j in i:
@@ -334,19 +334,19 @@ class Triangulate_TMs():
 	    Null alignments are removed. In the case of mode 1~6, topic calculation is held at first. """
 
 	def __init__(self, model1=None, 
-			   model2=None, 
-             		   output_file=None,
-			   invert_flag=None, 
-			   disDic=None, 
-			   tpnum=None, 
-			   src=None, 
-			   tgt=None, 
-			   s_pvt=None,
-			   t_pvt=None, 
-			   s_theta=None, 
-			   t_theta=None):
+            model2=None, 
+            output_file=None,
+            invert_flag=None, 
+            disDic=None, 
+            tpnum=None, 
+            src=None, 
+            tgt=None, 
+            s_pvt=None,
+            t_pvt=None, 
+            s_theta=None, 
+            t_theta=None):
 
-		self.output_file = output_file
+        self.output_file = output_file
 		self.model1 = model1
 		self.model2 = model2
 		self.invert_flag = invert_flag
@@ -366,7 +366,7 @@ class Triangulate_TMs():
 			self.t_pvt = handle_file(t_pvt, "open", "r").readlines()
 			self.t_theta = handle_file(t_theta, "open", "r").readlines()
 			self.src = handle_file(src, "open", "r").readlines()  
-                        self.s_pvt = handle_file(s_pvt, "open", "r").readlines()
+            self.s_pvt = handle_file(s_pvt, "open", "r").readlines()
 			self.s_theta = handle_file(s_theta, "open", "r").readlines()
 
 	def combine_standard(self):
@@ -375,14 +375,14 @@ class Triangulate_TMs():
 
 		if self.invert_flag == "yes":
 			if args.tp == 4 or args.tp == 6 or args.tp == 5:
-                                lda_main(self.src, self.s_pvt, self.s_theta, model1, args.proc, "model1_dis", flag="ps")
+                lda_main(self.src, self.s_pvt, self.s_theta, model1, args.proc, "model1_dis", flag="ps")
 				model1_dis = handle_file("model1_dis", "open", "r")
 				table_sort(model1_dis, "model1_dis_inv",flag="ps_invert")
-                                model1 = handle_file("model1_dis_inv", "open", "r")
-                                lda_main(self.tgt, self.t_pvt, self.t_theta, model2, args.proc, "model2_dis", flag="pt")
-                                model2_dis = handle_file("model2_dis", "open", "r")
+                model1 = handle_file("model1_dis_inv", "open", "r")
+                lda_main(self.tgt, self.t_pvt, self.t_theta, model2, args.proc, "model2_dis", flag="pt")
+                model2_dis = handle_file("model2_dis", "open", "r")
 				table_sort(model2_dis, "model2_dis_sorted")                                           
-                                model2 = handle_file("model2_dis_sorted", "open", "r")  
+                model2 = handle_file("model2_dis_sorted", "open", "r")  
 			else:
 				if args.tp == 3:
 					lda_main(self.src, self.s_pvt, self.s_theta, model1, args.proc, "model1_dis")
@@ -391,7 +391,7 @@ class Triangulate_TMs():
 					model1 = handle_file("model1_dis_inv", "open", "r")
 				else:
 					table_sort(model1, "model1_inv",flag="ps_invert")
-                        		model1 = handle_file("model1_inv", "open", "r")
+                    model1 = handle_file("model1_inv", "open", "r")
 
 				if args.tp == 2:
 					lda_main(self.tgt, self.t_pvt, self.t_theta, model2, args.proc, "model2_dis")
@@ -400,7 +400,7 @@ class Triangulate_TMs():
 					model2 = handle_file("model2_dis_sorted", "open", "r")
 				else:
 					table_sort(model2, "model2_sorted")
-                        		model2 = handle_file("model2_sorted", "open", "r")
+                    model2 = handle_file("model2_sorted", "open", "r")
 
 		output_file = handle_file(self.output_file, 'open', mode='w')
 
@@ -439,7 +439,7 @@ class Triangulate_TMs():
 					line2 = _load_line(model2.readline())
 					continue
 				else:
-					self._combine_and_print(output_object)				
+                    self._combine_and_print(output_object)
 
 			if not line1 or not line2:
 				self._combine_and_print(output_object)
@@ -491,7 +491,7 @@ class Triangulate_TMs():
 
 				elif args.tp == 3:
 					doc_dis = phrase1[5]
-                                        outline = _write_phrasetable_file([src, tgt, features, word_alignments, word_counts, pvt, doc_dis])
+                    outline = _write_phrasetable_file([src, tgt, features, word_alignments, word_counts, pvt, doc_dis])
 
 				elif args.tp == 4:
 					doc_dis = self.topic_plus(phrase1[5], phrase2[5])
@@ -499,8 +499,8 @@ class Triangulate_TMs():
 
 				elif args.tp == 5:
 
-					tp_s = max(phrase1[5])	
-					features.append(tp_s)				
+                    tp_s = max(phrase1[5])	
+                    features.append(tp_s)
 
 					tp_t = max(phrase2[5])
 					features.append(tp_t)
@@ -594,7 +594,7 @@ class Triangulate_TMs():
 
    		return phrase_features
 
-   	def _get_word_alignments(self, phrase_ps, phrase_pt):
+    def _get_word_alignments(self, phrase_ps, phrase_pt):
 		""" phrase pairs containing null alignments are automatically removed in _combine_and_print function """		
 		phrase_st = defaultdict(lambda: []*3)
 		for pvt_id, src_lst in phrase_ps.iteritems():
@@ -604,7 +604,6 @@ class Triangulate_TMs():
 					for tgt_id in tgt_lst:
 						if (tgt_id not in phrase_st[src_id]):
 							phrase_st[src_id].append(tgt_id)
-
 
 		return phrase_st
 
@@ -768,22 +767,22 @@ class Merge_TM():
 		#features
 		cur_line = lines[0]
 		if args.combine == "max": # select max feature
-			for j in range(len(lines)-1):
-                        	for i in range(4):
-                                	cur_line[2][i] = max(cur_line[2][i], lines[j+1][2][i])
+            for j in range(len(lines)-1):
+                for i in range(4):
+                    cur_line[2][i] = max(cur_line[2][i], lines[j+1][2][i])
 
 		elif args.combine == "sum": # sum up features (default)
 			for j in range(len(lines)-1):
-                        	for i in range(4):
-                                	cur_line[2][i] += lines[j+1][2][i]
-                                	cur_line[2][i] = min(cur_line[2][i], 1.0)
+                for i in range(4):
+                    cur_line[2][i] += lines[j+1][2][i]
+                    cur_line[2][i] = min(cur_line[2][i], 1.0)
 
 		#alignment
 		for i in range(len(lines)-1):
-                	for _src, key in lines[i+1][3].iteritems():
-                        	for _tgt in key:
-                                	if _tgt not in cur_line[3][_src]:
-                                        	cur_line[3][_src].append(_tgt)
+            for _src, key in lines[i+1][3].iteritems():
+                for _tgt in key:
+                    if _tgt not in cur_line[3][_src]:
+                        cur_line[3][_src].append(_tgt)
 
 		outline = [src, tgt, cur_line[2], cur_line[3], count, pvt, dis_av]		
 		return outline
@@ -906,7 +905,7 @@ class Normalize_prob():
 			for i in prev_lines:
 				i[2][2] = float(i[2][2]) / sum_prob
 				outline = _write_phrasetable_file(i)
-                                output_object.write(outline)
+                output_object.write(outline)
 
 ##########################################################################
 
@@ -954,97 +953,97 @@ class Word_prob():
 
 	def make_lexDic(self, model):
 		""" make lexical translation probability dictionary(dic[src,tgt]=prob1,prob2) """
+        
+        s2t = handle_file("lex.s2t", "open", "w")
+        t2s = handle_file("lex.t2s", "open", "w")
 
-        	s2t = handle_file("lex.s2t", "open", "w")
-        	t2s = handle_file("lex.t2s", "open", "w")
+        dic = defaultdict(int)
+        for i in model:
+            line = i.strip().split(" ||| ")
+            src=line[0].split()
+        	tgt=line[1].split()
+            align = line[3].split()
+            for i in align:
+                s=int(i.split("-")[0])
+                t=int(i.split("-")[1])
+                dic[src[s], tgt[t]] += float(line[2].split()[2])
 
-        	dic = defaultdict(int)
-        	for i in model:
-                	line = i.strip().split(" ||| ")
-                	src=line[0].split()
-                	tgt=line[1].split()
-                	align = line[3].split()
-                	for i in align:
-                        	s=int(i.split("-")[0])
-                        	t=int(i.split("-")[1])
-                        	dic[src[s], tgt[t]] += float(line[2].split()[2])
+        for i, j in sorted(dic.items(), reverse=True, key=lambda x:x[0][0]):
+            outline = "%s ||| %s ||| %s\n" %(i[0], i[1], j)
+            s2t.write(outline)
+        for i, j in sorted(dic.items(), reverse=True, key=lambda x:x[0][1]):
+            outline = "%s ||| %s ||| %s\n" %(i[0], i[1], j)
+            t2s.write(outline)
 
-        	for i, j in sorted(dic.items(), reverse=True, key=lambda x:x[0][0]):
-                	outline = "%s ||| %s ||| %s\n" %(i[0], i[1], j)
-                	s2t.write(outline)
-        	for i, j in sorted(dic.items(), reverse=True, key=lambda x:x[0][1]):
-                	outline = "%s ||| %s ||| %s\n" %(i[0], i[1], j)
-                	t2s.write(outline)
+        handle_file(s2t, "close", "w")
+        handle_file(t2s, "close", "w")
+        s2t = handle_file("lex.s2t", "open", "r")
+        t2s = handle_file("lex.t2s", "open", "r")
+        s2t_norm = handle_file("lex.s2t.norm", "open", "w")
+    	t2s_norm = handle_file("lex.t2s.norm", "open", "w")
 
-        	handle_file(s2t, "close", "w")
-        	handle_file(t2s, "close", "w")
-        	s2t = handle_file("lex.s2t", "open", "r")
-        	t2s = handle_file("lex.t2s", "open", "r")
-        	s2t_norm = handle_file("lex.s2t.norm", "open", "w")
-        	t2s_norm = handle_file("lex.t2s.norm", "open", "w")
+        self.normalize_lex(s2t, s2t_norm, flag="st")
+        self.normalize_lex(t2s, t2s_norm, flag="ts")
 
-        	self.normalize_lex(s2t, s2t_norm, flag="st")
-        	self.normalize_lex(t2s, t2s_norm, flag="ts")
+        handle_file(s2t, "close", "r")
+        handle_file(t2s, "close", "r")
+        handle_file(s2t_norm, "close", "w")
+        handle_file(t2s_norm, "close", "w")
 
-        	handle_file(s2t, "close", "r")
-        	handle_file(t2s, "close", "r")
-        	handle_file(s2t_norm, "close", "w")
-        	handle_file(t2s_norm, "close", "w")
+        mergedDic = defaultdict(list)
+        s2t_norm = handle_file("lex.s2t.norm", "open", "r")
+        t2s_norm = handle_file("lex.t2s.norm", "open", "r")
 
-        	mergedDic = defaultdict(list)
-        	s2t_norm = handle_file("lex.s2t.norm", "open", "r")
-        	t2s_norm = handle_file("lex.t2s.norm", "open", "r")
+        for i in s2t_norm:
+                line = i.strip().split(" ||| ")
+                mergedDic[line[0], line[1]].append(float(line[2]))
+        for i in t2s_norm:
+                line = i.strip().split(" ||| ")
+                mergedDic[line[0], line[1]].append(float(line[2]))
 
-        	for i in s2t_norm:
-                	line = i.strip().split(" ||| ")
-                	mergedDic[line[0], line[1]].append(float(line[2]))
-        	for i in t2s_norm:
-                	line = i.strip().split(" ||| ")
-                	mergedDic[line[0], line[1]].append(float(line[2]))
+        os.remove("lex.s2t")
+        os.remove("lex.t2s")
+        os.remove("lex.s2t.norm")
+        os.remove("lex.t2s.norm")
 
-        	os.remove("lex.s2t")
-        	os.remove("lex.t2s")
-        	os.remove("lex.s2t.norm")
-        	os.remove("lex.t2s.norm")
+        return mergedDic
 
-        	return mergedDic
+    def normalize_lex(self, model, w_file, flag=None):
+        """ reorder lexical table in src or tgt order """
 
-	def normalize_lex(self, model, w_file, flag=None):
-		""" reorder lexical table in src or tgt order """
+        prev_line=[]
+        for i in model:
+            line = i.strip().split(" ||| ")
+            try:
+                if flag == "st":
+                    if line[0] == prev_line[0][0]:
+                        prev_line.append(line)
+                    elif line[0] != prev_line[0][0]:
+                        self.combine_lex(prev_line, w_file)
+                        prev_line=[]
+                        prev_line.append(line)
+                elif flag == "ts":
+                    if line[1] == prev_line[0][1]:
+                        prev_line.append(line)
+                    elif line[1] != prev_line[0][1]:
+                        self.combine_lex(prev_line, w_file)
+                        prev_line = []
+                        prev_line.append(line)
+            except:
+                prev_line.append(line)
 
-        	prev_line=[]
-        	for i in model:
-                	line = i.strip().split(" ||| ")
-               		try:
-                        	if flag == "st":
-                                	if line[0] == prev_line[0][0]:
-                                        	prev_line.append(line)
-                                	elif line[0] != prev_line[0][0]:
-                                        	self.combine_lex(prev_line, w_file)
-                                        	prev_line=[]
-                                        	prev_line.append(line)
-                        	elif flag == "ts":
-                                	if line[1] == prev_line[0][1]:
-                                        	prev_line.append(line)
-                                	elif line[1] != prev_line[0][1]:
-                                        	self.combine_lex(prev_line, w_file)
-                                        	prev_line = []
-                                        	prev_line.append(line)
-                	except:
-                        	prev_line.append(line)
+        if prev_line:
+            self.combine_lex(prev_line, w_file)
+            prev_line=[]
 
-        	if prev_line:
-                	self.combine_lex(prev_line, w_file)
-                	prev_line=[]
+    def combine_lex(self,lines, w_lex):
+        """ normalize and print lexical table """
 
-	def combine_lex(self,lines, w_lex):
-		""" normalize and print lexical table """
-
-        	sum_w = sum([float(i[2])  for i in lines])
-        	for i in lines:
-                	i[2] = float(i[2]) / sum_w
-                	outline = "%s ||| %s ||| %s\n" %(i[0], i[1], i[2])
-                	w_lex.write(outline)
+        sum_w = sum([float(i[2])  for i in lines])
+        for i in lines:
+            i[2] = float(i[2]) / sum_w
+            outline = "%s ||| %s ||| %s\n" %(i[0], i[1], i[2])
+            w_lex.write(outline)
 
 
 ###########################  Execute  ###################################
@@ -1058,54 +1057,53 @@ if __name__ == "__main__":
 		args = parse_command_line()
 		
 		if args.tp == 1:
-			disDic = disToDic(args.proc)
+            disDic = disToDic(args.proc)
 			combiner = Triangulate_TMs(model1=args.pvt_src, 
-						   model2=args.pvt_tgt, 
-						   output_file=args.output,
-						   invert_flag=args.invert_flag, 
-						   disDic=disDic,tpnum=args.tpnum)
+                    model2=args.pvt_tgt, 
+                    output_file=args.output,
+                    invert_flag=args.invert_flag, 
+                    disDic=disDic,tpnum=args.tpnum)
 
 		elif args.tp == 0:
 			combiner = Triangulate_TMs(model1=args.pvt_src, 
-						   model2=args.pvt_tgt, 
-						   output_file=args.output,
-						   invert_flag=args.invert_flag)
+                    model2=args.pvt_tgt, 
+					output_file=args.output,
+				    invert_flag=args.invert_flag)
 
 		elif args.tp == 2 or args.tp == 3 or args.tp == 4 or args.tp == 5 or args.tp == 6:
 			combiner = Triangulate_TMs(model1=args.pvt_src, 
-						   model2=args.pvt_tgt, 
-					  	   output_file=args.output,
-						   invert_flag=args.invert_flag, 
-						   tpnum=args.tpnum, 
-						   src=args.src, 
-						   tgt=args.tgt, 
-						   s_pvt=args.s_pvt, 
-						   t_pvt=args.t_pvt, 
-						   s_theta=args.s_theta, 
-						   t_theta=args.t_theta)
+                    model2=args.pvt_tgt, 
+                    output_file=args.output,
+                    invert_flag=args.invert_flag, 
+                    tpnum=args.tpnum, 
+                    src=args.src, 
+                    tgt=args.tgt, 
+                    s_pvt=args.s_pvt, 
+                    t_pvt=args.t_pvt, 
+                    s_theta=args.s_theta, 
+                    t_theta=args.t_theta)
 
 		
 		#combine tables
 		combiner.combine_standard()
 
 		#remove tmp files
-                if args.tp == 2:
-			pass
-                        os.remove("model2_dis")
-                        os.remove("model2_dis_sorted")
-                        os.remove("model1_inv")
-                elif args.tp == 3:
-                        os.remove("model1_dis")
-                        os.remove("model1_dis_inv")
-                        os.remove("model2_sorted")
-                elif args.tp == 4 or args.tp == 6 or args.tp == 5:
-                        os.remove("model1_dis")
-                        os.remove("model1_dis_inv")
-                        os.remove("model2_dis")
-                        os.remove("model2_dis_sorted")
+        if args.tp == 2:
+            os.remove("model2_dis")
+            os.remove("model2_dis_sorted")
+            os.remove("model1_inv")
+        elif args.tp == 3:
+            os.remove("model1_dis")
+            os.remove("model1_dis_inv") 
+            os.remove("model2_sorted")
+        elif args.tp == 4 or args.tp == 6 or args.tp == 5:
+            os.remove("model1_dis")
+            os.remove("model1_dis_inv")
+            os.remove("model2_dis")
+            os.remove("model2_dis_sorted")
 		elif args.tp == 0:
-			os.remove("model1_inv")
-			os.remove("model2_sorted")
+            os.remove("model1_inv")
+            os.remove("model2_sorted")
 
 		#merge multiple lines(rules)
 		tmp = handle_file(args.output, "open", "r")
