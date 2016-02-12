@@ -21,7 +21,7 @@ def nbestList():
 		sentence = line[1]
 		if args.ter == "1":
 			w.write(sentence+"  "+"( "+str(line[0])+" )"+"\n")
-		else:		
+		else:
 			w.write(sentence+"\n")
 
 def outputCut():
