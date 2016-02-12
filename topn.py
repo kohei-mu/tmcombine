@@ -1,6 +1,8 @@
 #/usr/bin/env python
 #-*- coding: utf-8 -*-
 
+# preprocess script for TER
+
 import argparse
 
 parser = argparse.ArgumentParser(description="show this help message")
