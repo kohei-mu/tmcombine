@@ -373,34 +373,43 @@ class Triangulate_TMs():
 		model1 = handle_file(self.model1, 'open', 'r')
 		model2 = handle_file(self.model2, 'open', 'r')
 
-		if self.invert_flag == "yes":
-			if args.tp == 4 or args.tp == 6 or args.tp == 5:
-                lda_main(self.src, self.s_pvt, self.s_theta, model1, args.proc, "model1_dis", flag="ps")
+		if args.tp == 4 or args.tp == 6 or args.tp == 5:
+            lda_main(self.src, self.s_pvt, self.s_theta, model1, args.proc, "model1_dis", flag="ps")
+			model1_dis = handle_file("model1_dis", "open", "r")
+            if self.invert_flag == "yes":
+			    table_sort(model1_dis, "model1_dis_inv",flag="ps_invert")
+            else:
+                table_sort(model1_dis, "model1_dis_inv")
+            model1 = handle_file("model1_dis_inv", "open", "r")
+            lda_main(self.tgt, self.t_pvt, self.t_theta, model2, args.proc, "model2_dis", flag="pt")
+            model2_dis = handle_file("model2_dis", "open", "r")
+			table_sort(model2_dis, "model2_dis_sorted")                                          
+            model2 = handle_file("model2_dis_sorted", "open", "r")  
+		else:
+			if args.tp == 3:
+				lda_main(self.src, self.s_pvt, self.s_theta, model1, args.proc, "model1_dis")
 				model1_dis = handle_file("model1_dis", "open", "r")
-				table_sort(model1_dis, "model1_dis_inv",flag="ps_invert")
-                model1 = handle_file("model1_dis_inv", "open", "r")
-                lda_main(self.tgt, self.t_pvt, self.t_theta, model2, args.proc, "model2_dis", flag="pt")
-                model2_dis = handle_file("model2_dis", "open", "r")
-				table_sort(model2_dis, "model2_dis_sorted")                                           
-                model2 = handle_file("model2_dis_sorted", "open", "r")  
-			else:
-				if args.tp == 3:
-					lda_main(self.src, self.s_pvt, self.s_theta, model1, args.proc, "model1_dis")
-					model1_dis = handle_file("model1_dis", "open", "r")
-					table_sort(model1_dis, "model1_dis_inv",flag="ps_invert")
-					model1 = handle_file("model1_dis_inv", "open", "r")
-				else:
-					table_sort(model1, "model1_inv",flag="ps_invert")
-                    model1 = handle_file("model1_inv", "open", "r")
+                if self.invert_flag == "yes":
+                    table_sort(model1_dis, "model1_dis_inv",flag="ps_invert")
+                else:
+                    table_sort(model1_dis, "model1_dis_inv")
+				model1 = handle_file("model1_dis_inv", "open", "r")
+			else: #args.tp == 0 or args.tp == 1
+                if self.invert_flag == "yes":
+                    table_sort(model1, "model1_inv",flag="ps_invert")
+                else:
+                    table_sort(model1_dis, "model1_dis_inv")
+                model1 = handle_file("model1_inv", "open", "r")
 
-				if args.tp == 2:
-					lda_main(self.tgt, self.t_pvt, self.t_theta, model2, args.proc, "model2_dis")
-					model2_dis = handle_file("model2_dis", "open", "r")
-					table_sort(model2_dis, "model2_dis_sorted")
-					model2 = handle_file("model2_dis_sorted", "open", "r")
-				else:
-					table_sort(model2, "model2_sorted")
-                    model2 = handle_file("model2_sorted", "open", "r")
+			if args.tp == 2:
+				lda_main(self.tgt, self.t_pvt, self.t_theta, model2, args.proc, "model2_dis")
+				model2_dis = handle_file("model2_dis", "open", "r")
+				table_sort(model2_dis, "model2_dis_sorted")
+				model2 = handle_file("model2_dis_sorted", "open", "r")
+			else: #args.tp == 0 or args.tp == 1
+				table_sort(model2, "model2_sorted")
+                model2 = handle_file("model2_sorted", "open", "r")
+
 
 		output_file = handle_file(self.output_file, 'open', mode='w')
 
@@ -1082,8 +1091,7 @@ if __name__ == "__main__":
                     t_pvt=args.t_pvt, 
                     s_theta=args.s_theta, 
                     t_theta=args.t_theta)
-
-		
+	
 		#combine tables
 		combiner.combine_standard()
 
@@ -1101,7 +1109,7 @@ if __name__ == "__main__":
             os.remove("model1_dis_inv")
             os.remove("model2_dis")
             os.remove("model2_dis_sorted")
-		elif args.tp == 0:
+		elif args.tp == 0 or args.tp == 1:
             os.remove("model1_inv")
             os.remove("model2_sorted")
 
@@ -1112,19 +1120,23 @@ if __name__ == "__main__":
 		merger = Merge_TM(model=tmp_sorted, output_file=args.merged_output)
 		merger._combine_TM()
 
-		#normalize probabilities
-		#tmp_for_norm = handle_file(args.merged_output, "open", "r")
-		#normalizer = Normalize_prob(model=tmp_for_norm, output_file=args.norm_output)
-		#normalizer.normalize_table()
+        if args.tp == 0 or args.tp == 5 or args.tp == 6:
+            #normalize probabilities
+		    tmp_for_norm = handle_file(args.merged_output, "open", "r")
+		    normalizer = Normalize_prob(model=tmp_for_norm, output_file=args.norm_output)
+		    normalizer.normalize_table()
+		    #re-compute lexical translation probabilities
+		    tmp_for_lex = handle_file(args.norm_output, "open", "r")
+		    model_for_lexDic = handle_file(args.norm_output, "open", "r")
+		    lex_calculator = Word_prob(model=tmp_for_lex, output=args.lex_output, model_for_lexDic=model_for_lexDic)
+		    lex_calculator.lex_calc()
+		    #delete tmp files
+		    os.remove("tmp_sorted")
+		    os.remove(args.output)
+		    os.remove(args.merged_output)
+		    os.remove(args.norm_output)
+        else:
+            os.remove("tmp_sorted")
+            os.remove(args.output)
 
-		#re-compute lexical translation probabilities
-		#tmp_for_lex = handle_file(args.norm_output, "open", "r")
-		#model_for_lexDic = handle_file(args.norm_output, "open", "r")
-		#lex_calculator = Word_prob(model=tmp_for_lex, output=args.lex_output, model_for_lexDic=model_for_lexDic)
-		#lex_calculator.lex_calc()
-		
-		#delete tmp files
-		os.remove("tmp_sorted")
-		os.remove(args.output)
-		#os.remove(args.merged_output)
-		#os.remove(args.norm_output)
+
